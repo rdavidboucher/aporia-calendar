@@ -1,4 +1,4 @@
-/* App.css - Pure Monochrome */
+/* App.css - Pure Monochrome & Aporia Super App */
 
 :root {
   /* Default Light Mode */
@@ -36,23 +36,58 @@ body {
   padding: 2rem;
 }
 
+/* --- TOP NAVIGATION & BUTTONS --- */
 .top-nav {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   border-bottom: 1px solid var(--border);
   padding-bottom: 1rem;
   margin-bottom: 3rem;
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
 }
 
 .brand {
+  font-family: 'Georgia', serif;
+  font-size: 1.8rem;
+  letter-spacing: 4px;
   font-weight: 700;
   color: var(--text-main);
+  transition: opacity 0.2s;
 }
 
+.brand:hover {
+  opacity: 0.7;
+}
+
+.nav-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+
+.nav-toggle:hover {
+  color: var(--text-main);
+  border-color: var(--text-main);
+}
+
+.nav-toggle.active {
+  background: var(--text-main);
+  color: var(--bg-color);
+  border-color: var(--text-main);
+}
+
+/* --- ENTRY HEADERS --- */
 .entry-header {
   text-align: center;
   margin-bottom: 4rem;
@@ -82,6 +117,7 @@ body {
   margin: 0;
 }
 
+/* --- CONTENT BLOCKS --- */
 .section-block {
   margin-bottom: 3rem;
 }
@@ -112,6 +148,39 @@ body {
   border: 1px solid var(--border);
 }
 
+.body-text {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+/* --- THE SCRATCHPAD --- */
+.scratchpad-container {
+  margin-top: 4rem;
+  border-top: 1px dashed var(--border);
+  padding-top: 2rem;
+}
+
+.scratchpad {
+  width: 100%;
+  min-height: 150px;
+  background-color: var(--surface-color);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.5rem;
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.scratchpad:focus {
+  outline: none;
+  border-color: var(--text-main);
+}
+
+/* --- FOOTER & TAGS --- */
 .entry-footer {
   margin-top: 4rem;
   padding-top: 2rem;
@@ -135,6 +204,7 @@ body {
   border: 1px solid var(--border);
 }
 
+/* --- NAVIGATION CONTROLS --- */
 .navigation-controls {
   display: flex;
   justify-content: space-between;
@@ -164,60 +234,25 @@ body {
   border-color: var(--border);
 }
 
-/* --- UPDATED BRANDING --- */
-.brand {
-  font-family: 'Georgia', serif; /* Gives it an elegant, classic book feel */
-  font-size: 1.8rem;
-  letter-spacing: 4px;
-  font-weight: 700;
-  color: var(--text-main);
+/* --- GUIDE LIST STYLING --- */
+.guide-list {
+  margin: 1rem 0 0 0;
+  padding-left: 1.5rem;
+  line-height: 1.8;
 }
 
-/* --- THE SCRATCHPAD --- */
-.scratchpad {
-  width: 100%;
-  min-height: 150px;
-  background-color: var(--surface-color);
-  color: var(--text-main);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 1rem;
-  font-family: 'Inter', -apple-system, sans-serif;
-  font-size: 1rem;
-  line-height: 1.6;
-  resize: vertical;
-  box-sizing: border-box;
-}
-
-.scratchpad:focus {
-  outline: none;
-  border-color: var(--text-main);
+.guide-list li {
+  margin-bottom: 0.5rem;
 }
 
 /* --- MASTER INDEX VIEWER --- */
-.index-toggle {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  padding: 0.4rem 1rem;
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  transition: all 0.2s;
+.index-overlay, .guide-view, .content-container {
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-.index-toggle:hover {
-  color: var(--text-main);
-  border-color: var(--text-main);
-}
-
-.index-overlay {
-  background: var(--surface-color);
-  padding: 3rem;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  margin-top: 2rem;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .index-grid {
@@ -248,6 +283,7 @@ body {
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
 .index-day-btn:hover {

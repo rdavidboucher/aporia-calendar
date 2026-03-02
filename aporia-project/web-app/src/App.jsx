@@ -7,19 +7,16 @@ function App() {
   const getTargetDay = () => {
     let startDateStr = localStorage.getItem('aporia_start_date');
     if (!startDateStr) {
-      // If first time opening the app, set today as Day 1
       startDateStr = new Date().toISOString();
       localStorage.setItem('aporia_start_date', startDateStr);
     }
     const startDate = new Date(startDateStr);
     const today = new Date();
-    // Calculate days elapsed
     const diffTime = Math.abs(today - startDate);
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
-    const target = diffDays + 1; // Start date = Day 1
+    const target = diffDays + 1;
     
-    // Find the closest available day in the database
     const closestEntry = data.reduce((prev, curr) => 
       Math.abs(curr.day - target) < Math.abs(prev.day - target) ? curr : prev
     );
@@ -30,26 +27,22 @@ function App() {
   const [entry, setEntry] = useState(null);
   
   // --- UI STATES ---
-  const [showIndex, setShowIndex] = useState(false);
+  // currentView can be: 'read', 'index', 'guide'
+  const [currentView, setCurrentView] = useState('read');
   const [notes, setNotes] = useState('');
 
-  // Update entry and load saved notes when day changes
   useEffect(() => {
     const todayEntry = data.find(d => d.day === currentDay);
     setEntry(todayEntry || data[0]);
-    
-    // Load local notes for this specific day
     setNotes(localStorage.getItem(`aporia_notes_day_${currentDay}`) || '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentDay]);
 
-  // Save notes locally as user types
   const handleNoteChange = (e) => {
     setNotes(e.target.value);
     localStorage.setItem(`aporia_notes_day_${currentDay}`, e.target.value);
   };
 
-  // --- NAVIGATION LOGIC ---
   const currentIndex = data.findIndex(d => d.day === currentDay);
 
   const goToNextDay = () => {
@@ -62,7 +55,7 @@ function App() {
 
   const jumpToDay = (day) => {
     setCurrentDay(day);
-    setShowIndex(false);
+    setCurrentView('read');
   };
 
   // --- GENERATE INDEX ---
@@ -84,14 +77,86 @@ function App() {
   return (
     <div className="aporia-app">
       <nav className="top-nav">
-        <span className="brand">APORIA</span>
-        <button className="index-toggle" onClick={() => setShowIndex(!showIndex)}>
-          {showIndex ? 'Close Index' : 'Thinkers Index'}
-        </button>
+        <span 
+          className="brand" 
+          onClick={() => setCurrentView('read')} 
+          style={{cursor: 'pointer'}}
+          title="Return to today's reading"
+        >
+          APORIA
+        </span>
+        <div className="nav-actions">
+          <button 
+            className={`nav-toggle ${currentView === 'guide' ? 'active' : ''}`} 
+            onClick={() => setCurrentView(currentView === 'guide' ? 'read' : 'guide')}
+          >
+            Guide
+          </button>
+          <button 
+            className={`nav-toggle ${currentView === 'index' ? 'active' : ''}`} 
+            onClick={() => setCurrentView(currentView === 'index' ? 'read' : 'index')}
+          >
+            Index
+          </button>
+        </div>
       </nav>
 
+      {/* --- GUIDE VIEW --- */}
+      {currentView === 'guide' && (
+        <div className="guide-view">
+          <header className="entry-header" style={{ marginBottom: '2rem' }}>
+            <h1 className="entry-title">How to Use Aporia</h1>
+            <h2 className="entry-thinker">The Architecture of the Examined Life</h2>
+          </header>
+
+          <section className="entry-body">
+            <div className="section-block synthesis">
+              <span className="section-label">The Project (The Why)</span>
+              <p className="body-text">
+                Aporia (Greek: ἀπορία) translates to a state of productive confusion—the moment you realize your current maps of reality are insufficient. 
+                <br/><br/>
+                This is a 365-day philosophical curriculum designed not for passive reading, but for active practice. The core premise is that wisdom is not merely information; it is maintenance. Understanding the argument that you should not be disturbed by what is outside your control is worth nothing if you are still disturbed by it. Aporia provides the daily friction required to turn comprehension into character.
+              </p>
+            </div>
+
+            <div className="section-block application">
+              <span className="section-label">The Anatomy of a Day</span>
+              <div className="action-card">
+                <p className="body-text">Every day requires roughly 15 minutes of attention, structured as follows:</p>
+                <ul className="guide-list">
+                  <li><strong>The Seed:</strong> A foundational quote from a primary thinker.</li>
+                  <li><strong>The Synthesis:</strong> Contextual framing that connects the historical idea to modern psychological and economic realities.</li>
+                  <li><strong>The Application:</strong> A specific, bounded action to perform that day. Do not skip this. The philosophy lives in the execution.</li>
+                  <li><strong>Today's Prompt:</strong> A writing prompt designed to expose the gap between what you think you believe and how you actually behave.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="section-block srs-review">
+              <span className="section-label">The Methodology: Spaced Repetition (SRS)</span>
+              <div className="action-card" style={{ backgroundColor: 'var(--bg-color)', border: '1px solid var(--border)' }}>
+                <p className="body-text">
+                  Human memory degrades predictably. To counteract this, Aporia utilizes a hard-coded <strong>Spaced Repetition System (SRS)</strong>. 
+                  <br/><br/>
+                  Throughout the curriculum, you will encounter "SRS Review" blocks prompting you to recall exercises from days or weeks prior. Do not look back at your old notes immediately. Attempt to retrieve the memory cold. The cognitive strain of remembering is exactly what builds the neural pathway. This ensures the concepts accumulate rather than replace one another.
+                </p>
+              </div>
+            </div>
+
+            <div className="section-block seed">
+              <span className="section-label">The Interface</span>
+              <p className="body-text">
+                <strong>The Calendar:</strong> The app tracks your start date. When you return tomorrow, it will automatically place you on the correct day.<br/>
+                <strong>The Scratchpad:</strong> The text area at the bottom of the reading view is private. It saves automatically to your browser's local storage. If you clear your browser cache, these notes will disappear. Consider copying critical insights to a permanent analog journal.<br/>
+                <strong>The Index:</strong> Use the top navigation to trace specific thinkers across the 12 Arcs of the year.
+              </p>
+            </div>
+          </section>
+        </div>
+      )}
+
       {/* --- INDEX VIEW --- */}
-      {showIndex && (
+      {currentView === 'index' && (
         <div className="index-overlay">
           <h2>Master Index of Thinkers</h2>
           <div className="index-grid">
@@ -112,7 +177,7 @@ function App() {
       )}
 
       {/* --- MAIN READING VIEW --- */}
-      {!showIndex && (
+      {currentView === 'read' && (
         <main className="content-container">
           <header className="entry-header">
             <div className="day-badge">Day {entry.day}</div>
@@ -167,7 +232,7 @@ function App() {
               <span className="section-label">Personal Scratchpad</span>
               <textarea 
                 className="scratchpad" 
-                placeholder="Write your actions, responses, or reflections here... (Auto-saves to your browser)"
+                placeholder="Write your actions, responses, or reflections here... (Auto-saves privately to your browser)"
                 value={notes}
                 onChange={handleNoteChange}
               />
