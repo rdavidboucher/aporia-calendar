@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import data from './aporia_database.json';
-import './App.css';
+import './index.css';
 
 function App() {
   // We initialize with the first day available in your data, 
