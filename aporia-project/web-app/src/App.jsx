@@ -1,59 +1,117 @@
 import React, { useState, useEffect } from 'react';
-import data from './aporia_database.json'; // Ensure this file is in the src folder
-import './index.css';
+import data from './aporia_database.json';
+import './App.css';
 
 function App() {
-  // State to track which day the user is on
-  const [currentDay, setCurrentDay] = useState(1);
+  // We initialize with the first day available in your data, 
+  // rather than assuming Day 1 exists.
+  const [currentDay, setCurrentDay] = useState(data[0]?.day || 1);
   const [entry, setEntry] = useState(null);
 
   useEffect(() => {
-    // Find the entry for the current day in our JSON database
+    // Find the specific entry for the current day
     const todayEntry = data.find(d => d.day === currentDay);
     setEntry(todayEntry || data[0]);
+    
+    // Smooth scroll to top when changing days
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentDay]);
 
-  if (!entry) return <div>Loading the examined life...</div>;
+  // Navigation Logic: Jumps to the next/prev index in the array
+  const currentIndex = data.findIndex(d => d.day === currentDay);
+
+  const goToNextDay = () => {
+    if (currentIndex < data.length - 1) {
+      setCurrentDay(data[currentIndex + 1].day);
+    }
+  };
+
+  const goToPreviousDay = () => {
+    if (currentIndex > 0) {
+      setCurrentDay(data[currentIndex - 1].day);
+    }
+  };
+
+  if (!entry) return <div className="loading">Initializing the examined life...</div>;
 
   return (
-    <div className="aporia-container">
-      <header>
-        <div className="metadata">Day {entry.day} • Arc {Math.ceil(entry.day / 30)}</div>
-        <h1>{entry.title}</h1>
-        <h3>{entry.thinker}</h3>
-      </header>
+    <div className="aporia-app">
+      <nav className="top-nav">
+        <span className="brand">APORIA</span>
+        <span className="arc-label">Arc {Math.ceil(entry.day / 30)}: {getArcTheme(entry.day)}</span>
+      </nav>
 
-      <section className="main-content">
-        <blockquote className="seed-quote">
-          "{entry.seed}"
-        </blockquote>
+      <main className="content-container">
+        <header className="entry-header">
+          <div className="day-badge">Day {entry.day}</div>
+          <h1 className="entry-title">{entry.title}</h1>
+          <h2 className="entry-thinker">{entry.thinker}</h2>
+        </header>
 
-        <div className="synthesis-section">
-          <h4>The Synthesis</h4>
-          <p>{entry.synthesis}</p>
+        <section className="entry-body">
+          <div className="section-block seed">
+            <span className="section-label">The Seed</span>
+            <blockquote className="quote-text">
+              {entry.seed}
+            </blockquote>
+          </div>
+
+          <div className="section-block synthesis">
+            <span className="section-label">The Synthesis</span>
+            <p className="body-text">{entry.synthesis}</p>
+          </div>
+
+          <div className="section-block application">
+            <span className="section-label">The Application</span>
+            <div className="action-card">
+              <p className="body-text">{entry.application}</p>
+            </div>
+          </div>
+        </section>
+
+        <footer className="entry-footer">
+          <div className="evidence-note">
+            <strong>Evidence Note:</strong> {entry.evidence}
+          </div>
+          <div className="tags">
+            {entry.tags.split(' ').map(tag => (
+              <span key={tag} className="tag">{tag}</span>
+            ))}
+          </div>
+        </footer>
+
+        <div className="navigation-controls">
+          <button 
+            onClick={goToPreviousDay} 
+            disabled={currentIndex === 0}
+            className="nav-btn"
+          >
+            ← Previous
+          </button>
+          
+          <div className="progress-text">
+            Entry {currentIndex + 1} of {data.length}
+          </div>
+
+          <button 
+            onClick={goToNextDay} 
+            disabled={currentIndex === data.length - 1}
+            className="nav-btn"
+          >
+            Next →
+          </button>
         </div>
-
-        <div className="application-box">
-          <h4>Today’s Application</h4>
-          <p>{entry.application}</p>
-        </div>
-      </section>
-
-      <section className="navigation">
-        <button onClick={() => setCurrentDay(prev => Math.max(1, prev - 1))}>
-          Previous Day
-        </button>
-        <button onClick={() => setCurrentDay(prev => prev + 1)}>
-          Next Day
-        </button>
-      </section>
-
-      <footer style={{marginTop: '50px', fontSize: '0.8rem', opacity: 0.5}}>
-        Evidence: {entry.evidence}
-      </footer>
+      </main>
     </div>
   );
 }
 
-// THIS IS THE LINE THAT FIXES YOUR ERROR:
+// Helper to show Arc themes based on day ranges
+function getArcTheme(day) {
+  if (day <= 30) return "Foundation of Attention";
+  if (day <= 60) return "Architecture of Self";
+  if (day <= 90) return "The World As It Is";
+  return "Continuous Practice";
+}
+
 export default App;
