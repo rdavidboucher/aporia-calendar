@@ -1,165 +1,90 @@
-/* App.css - Pure Monochrome */
-
-:root {
-  /* Default Light Mode */
-  --bg-color: #ffffff;
-  --surface-color: #f5f5f5;
-  --text-main: #111111;
-  --text-muted: #666666;
-  --accent: #000000;
-  --border: #e0e0e0;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Pure Black & Grey Dark Mode */
-    --bg-color: #0a0a0a;
-    --surface-color: #171717;
-    --text-main: #eeeeee;
-    --text-muted: #888888;
-    --accent: #ffffff;
-    --border: #333333;
-  }
-}
-
-body {
-  margin: 0;
-  background-color: var(--bg-color);
-  color: var(--text-main);
-  font-family: 'Inter', -apple-system, sans-serif;
-  line-height: 1.6;
-}
-
-.aporia-app {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-.top-nav {
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 1rem;
-  margin-bottom: 3rem;
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
+/* --- UPDATED BRANDING --- */
 .brand {
+  font-family: 'Georgia', serif; /* Gives it an elegant, classic book feel */
+  font-size: 1.8rem;
+  letter-spacing: 4px;
   font-weight: 700;
   color: var(--text-main);
 }
 
-.entry-header {
-  text-align: center;
-  margin-bottom: 4rem;
-}
-
-.day-badge {
-  display: inline-block;
-  background: var(--bg-color);
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
+/* --- THE SCRATCHPAD --- */
+.scratchpad {
+  width: 100%;
+  min-height: 150px;
+  background-color: var(--surface-color);
   color: var(--text-main);
-  margin-bottom: 1rem;
   border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem;
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  resize: vertical;
+  box-sizing: border-box;
 }
 
-.entry-title {
-  font-size: 2.5rem;
-  margin: 0 0 0.5rem 0;
-  line-height: 1.2;
+.scratchpad:focus {
+  outline: none;
+  border-color: var(--text-main);
 }
 
-.entry-thinker {
-  font-size: 1.2rem;
+/* --- MASTER INDEX VIEWER --- */
+.index-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
   color: var(--text-muted);
-  font-weight: 400;
-  margin: 0;
-}
-
-.section-block {
-  margin-bottom: 3rem;
-}
-
-.section-label {
-  display: block;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  cursor: pointer;
   font-size: 0.8rem;
   text-transform: uppercase;
-  color: var(--text-muted);
-  letter-spacing: 1.5px;
-  margin-bottom: 1rem;
-  font-weight: 600;
+  transition: all 0.2s;
 }
 
-.quote-text {
-  font-size: 1.4rem;
-  font-style: italic;
-  border-left: 3px solid var(--accent);
-  padding-left: 1.5rem;
-  margin: 0;
+.index-toggle:hover {
+  color: var(--text-main);
+  border-color: var(--text-main);
+}
+
+.index-overlay {
+  background: var(--surface-color);
+  padding: 3rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  margin-top: 2rem;
+}
+
+.index-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.index-item strong {
+  display: block;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
   color: var(--text-main);
 }
 
-.action-card {
-  background: var(--surface-color);
-  padding: 2rem;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-}
-
-.entry-footer {
-  margin-top: 4rem;
-  padding-top: 2rem;
-  border-top: 1px solid var(--border);
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
-.tags {
-  margin-top: 1rem;
+.index-links {
   display: flex;
-  gap: 0.5rem;
   flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-.tag {
-  background: var(--surface-color);
-  padding: 0.2rem 0.6rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  border: 1px solid var(--border);
-}
-
-.navigation-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 4rem;
-}
-
-.nav-btn {
+.index-day-btn {
   background: var(--bg-color);
-  color: var(--text-main);
   border: 1px solid var(--border);
-  padding: 0.8rem 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  padding: 0.2rem 0.5rem;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s;
-  font-weight: 600;
 }
 
-.nav-btn:hover:not(:disabled) {
+.index-day-btn:hover {
   background: var(--text-main);
   color: var(--bg-color);
-}
-
-.nav-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-  border-color: var(--border);
 }
