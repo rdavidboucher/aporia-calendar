@@ -1,11 +1,25 @@
-/* App.css */
+/* App.css - Pure Monochrome */
+
 :root {
-  --bg-color: #0f1115;
-  --surface-color: #1a1d24;
-  --text-main: #e2e8f0;
-  --text-muted: #94a3b8;
-  --accent: #38bdf8;
-  --border: #334155;
+  /* Default Light Mode */
+  --bg-color: #ffffff;
+  --surface-color: #f5f5f5;
+  --text-main: #111111;
+  --text-muted: #666666;
+  --accent: #000000;
+  --border: #e0e0e0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Pure Black & Grey Dark Mode */
+    --bg-color: #0a0a0a;
+    --surface-color: #171717;
+    --text-main: #eeeeee;
+    --text-muted: #888888;
+    --accent: #ffffff;
+    --border: #333333;
+  }
 }
 
 body {
@@ -46,11 +60,11 @@ body {
 
 .day-badge {
   display: inline-block;
-  background: var(--surface-color);
+  background: var(--bg-color);
   padding: 0.5rem 1rem;
   border-radius: 20px;
   font-size: 0.85rem;
-  color: var(--accent);
+  color: var(--text-main);
   margin-bottom: 1rem;
   border: 1px solid var(--border);
 }
@@ -76,24 +90,25 @@ body {
   display: block;
   font-size: 0.8rem;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--text-muted);
   letter-spacing: 1.5px;
   margin-bottom: 1rem;
+  font-weight: 600;
 }
 
 .quote-text {
   font-size: 1.4rem;
   font-style: italic;
-  border-left: 4px solid var(--accent);
+  border-left: 3px solid var(--accent);
   padding-left: 1.5rem;
   margin: 0;
-  color: #f8fafc;
+  color: var(--text-main);
 }
 
 .action-card {
   background: var(--surface-color);
   padding: 2rem;
-  border-radius: 8px;
+  border-radius: 4px;
   border: 1px solid var(--border);
 }
 
@@ -117,6 +132,7 @@ body {
   padding: 0.2rem 0.6rem;
   border-radius: 4px;
   font-size: 0.8rem;
+  border: 1px solid var(--border);
 }
 
 .navigation-controls {
@@ -127,23 +143,23 @@ body {
 }
 
 .nav-btn {
-  background: transparent;
-  color: var(--accent);
-  border: 1px solid var(--accent);
+  background: var(--bg-color);
+  color: var(--text-main);
+  border: 1px solid var(--border);
   padding: 0.8rem 1.5rem;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
+  font-weight: 600;
 }
 
 .nav-btn:hover:not(:disabled) {
-  background: var(--accent);
+  background: var(--text-main);
   color: var(--bg-color);
 }
 
 .nav-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
-  border-color: var(--text-muted);
-  color: var(--text-muted);
+  border-color: var(--border);
 }
