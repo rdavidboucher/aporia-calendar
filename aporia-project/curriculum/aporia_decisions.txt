@@ -1,0 +1,611 @@
+================================================================================
+APORIA — MASTER DECISION FILE
+Project: The Applied Philosophy Daily Companion App
+Last Updated: February 28, 2026
+================================================================================
+
+This file is the single source of truth for every architectural, editorial,
+technical, and structural decision made during the design of Aporia. Load this
+file at the start of any new session before writing content or code.
+
+================================================================================
+SECTION 1: PROJECT IDENTITY
+================================================================================
+
+Name: Aporia
+  - Etymology: Socratic term for productive uncertainty / philosophical impasse.
+  - Signals intellectual seriousness to the target user.
+
+Tagline (working): A daily companion for the examined life.
+
+Format: Daily companion / journal app. Not a life-hack app. Not a summary app.
+  - The philosophical tradition provides the frame.
+  - The user provides the content through daily writing.
+  - The real goal: use entries to remind the user of books they have read, then
+    generate thinking and writing grounded in their own life — not lived through
+    other thinkers' lenses.
+
+Target user: The user themselves (solo project at MVP stage). Intellectually
+  serious, has read widely, codes in Python, not a beginner.
+
+================================================================================
+SECTION 2: THE DAILY LOOP (CORE STRUCTURE)
+================================================================================
+
+Each day consists of four modules, in order:
+
+--- MODULE I: THE MAIN ENTRY (New Material) ---
+
+  Fields:
+  - Title: (string) Evocative title for the day's entry.
+  - Thinkers: (array of strings) 1-2 primary thinkers for the day.
+  - The Seed: A direct quote or core idea. Must follow Quote Policy (see S7).
+  - The Synthesis: Brief explanation of the underlying principle. 2-4 paragraphs.
+    Written to remind the user of the book/idea, not to teach from scratch.
+  - The Application: A concrete, repeatable action or exercise for that day.
+    Specific enough to do before 9am if needed.
+  - The Tags: One or more tags from the canonical Tag System (see Section 4).
+  - The Evidence Note: A scientific "reality check" following the Evidence Policy
+    (see Section 6). Format: "Research on X (Author, Year) supports Y
+    directionally. [Qualifier: ...]" Must use approved qualifiers only.
+
+--- MODULE II: THE SRS REVIEW (3-5 Entries) ---
+
+  - A rotating stack of previous entries.
+  - Scheduling follows the SM-2 algorithm (Wozniak, 1990).
+  - Intervals: driven by user quality rating after each review (see Section 5).
+  - Each review card contains: original Seed, a recall prompt, and the Tags.
+  - The review prompts ask "how did this land in practice?" not "what did this mean?"
+
+--- MODULE III: TODAY'S PROMPT (The Reflection Loop) ---
+
+  - One journal prompt per day.
+  - Three rotating archetypes (cycling through the year):
+      * Synthetic: ties the prompt to the day's new Main Entry.
+      * Audit: accountability check on a past practice entry.
+      * In-The-Wild: applies a philosophical model to a random daily event.
+  - The prompt must require the user to surface something from their own life.
+    The thinker provides the frame. The user provides the content.
+  - The Van Gogh "Letter to Theo" prompt from the Day 3 proof of concept is the
+    canonical quality standard for this module.
+
+--- MODULE IV: THE CATEGORIZED ARCHIVE ---
+
+  - Persistent database of all user journal responses.
+  - Each saved response is tagged with the Tag System labels.
+  - The Archive is searchable and filterable by tag.
+  - CRITICAL PRODUCT REQUIREMENT: In Arc 12 (Days 331-365), the final 10 days
+    use the user's own Archive entries as the primary input for prompts — not
+    the content database. The app must be able to surface past journal entries
+    by tag and date as the "text" for these final prompts. This must be
+    architected into the Firestore schema from the beginning, not retrofitted.
+
+================================================================================
+SECTION 3: THE VALIDATION / SRS RATING FIELD
+================================================================================
+
+After reading each Main Entry or SRS Review, the user rates it with a 3-point
+scale. This feeds directly into the SM-2 algorithm to compute the next interval.
+
+  Rating options (displayed as buttons in the UI):
+  - "Easy"       -> maps to SM-2 quality score: 5
+  - "Took effort" -> maps to SM-2 quality score: 3
+  - "Struggled"  -> maps to SM-2 quality score: 1
+
+  Additional boolean field on each Entry document:
+  - reviewed: true/false
+  - reviewed_at: timestamp
+
+  SM-2 algorithm (Wozniak, 1990) governs all interval calculations.
+  Do NOT use fixed intervals. Intervals are adaptive per user performance.
+  Reference implementation: https://www.supermemo.com/en/archives1990-2015/english/ol/sm2
+
+================================================================================
+SECTION 4: THE TAG SYSTEM
+================================================================================
+
+Every Main Entry and every journal response must carry one or more of these tags.
+Tags are the connective tissue of the entire SRS and Archive system.
+
+  [practice]         A concrete action or exercise.
+  [mindset]          A reframe or shift in perception.
+  [warning]          A trap, failure mode, or danger to avoid.
+  [tension]          Genuine disagreement between authors or traditions.
+  [overlap]          Genuine agreement across traditions.
+  [evidence-based]   Supported by empirical psychology or neuroscience.
+  [speculative]      Plausible but unverified. Applied liberally per author policy.
+  [internally focused] Concerns the self and inner life.
+  [relational]       Concerns others and society.
+  [theistic]         Requires or assumes belief in transcendence.
+  [unresolved]       No synthesis is possible. Left deliberately open.
+
+================================================================================
+SECTION 5: SRS LOGIC
+================================================================================
+
+Algorithm: SM-2 (Wozniak, 1990). Adaptive intervals, not fixed.
+The system combats the Forgetting Curve by scheduling reviews at the moment of
+optimal forgetting — just before the memory decays.
+
+User-facing rating scale maps to SM-2 quality scores:
+  Easy         -> 5
+  Took effort  -> 3
+  Struggled    -> 1
+
+Any entry rated below quality 3 is re-shown the next day regardless of interval.
+
+Approximate interval progression for a well-rated card:
+  Review 1: 1 day
+  Review 2: 3 days
+  Review 3: 7 days
+  Review 4: 21 days
+  Review 5+: computed by SM-2 ease factor, grows indefinitely
+
+The SRS stack shown each day (Module II) contains 3-5 cards drawn from the
+scheduled queue. The queue is maintained in Firestore per user per entry.
+
+================================================================================
+SECTION 6: EVIDENCE POLICY
+================================================================================
+
+NEVER present research as "proving" philosophy.
+
+Approved qualifiers (use exactly these strings):
+  - "Strong alignment"
+  - "Good directional support"
+  - "Speculative application"
+  - "The empirical situation is currently unsettled"
+
+Format for Evidence Notes:
+  "Research on X (Author, Year) supports Y directionally.
+  [Qualifier: the philosophical claim exceeds what the evidence strictly
+  demonstrates.]"
+
+Never say "studies show" or "science proves." Never present a single study as
+definitive. Note replication issues where known (e.g., some behavioral economics
+findings have not replicated cleanly post-2015).
+
+================================================================================
+SECTION 7: QUOTE POLICY
+================================================================================
+
+Precision is non-negotiable.
+
+  - If a quote cannot be verified against a primary source, flag as:
+      (paraphrase) or (source uncertain)
+  - Never present a secondary source's paraphrase as a direct quote.
+  - Prioritize primary texts in this order:
+      1. The original work (Letters, Meditations, Epistles, etc.)
+      2. A verified scholarly translation
+      3. A reputable secondary source, flagged as (via [Author])
+
+Special sourcing rules by author:
+  - Van Gogh: Prioritize Letters to Theo. Cite by letter number or date where
+    possible. Personal, applied tone is the target register.
+  - Rilke: Prioritize Letters to a Young Poet. Flag other sources carefully.
+  - Leonardo da Vinci: All quotes must be flagged (via Isaacson) or
+    (Notebooks, paraphrase). Isaacson is a biographer, not a primary source.
+    Do not present Isaacson's synthesis as Leonardo's direct voice.
+  - Naval Ravikant: Default tag [speculative] on every entry. Primary "texts"
+    are podcasts, Twitter threads, and The Almanack of Naval Ravikant
+    (a crowd-sourced compilation). Quote verification is difficult. Flag
+    all quotes as (source uncertain) unless traceable to a specific interview.
+  - Rick Rubin: Default tag [speculative] on every entry. The Creative Act
+    (2023) is the primary source.
+  - Harari: Default tag [speculative] on most entries. Claims frequently exceed
+    evidence. Note historian/scientist criticisms where relevant.
+  - Matt Ridley: REMOVED from pantheon. His optimism thesis has been
+    substantively criticized for cherry-picking data.
+
+================================================================================
+SECTION 8: THE PANTHEON (Confirmed Author List)
+================================================================================
+
+DECISION: No single thinker appears as PRIMARY thinker in more than 3 arcs.
+Any thinker may appear in SRS Review entries across the full year without limit.
+
+--- Stoicism & Resilience ---
+  Marcus Aurelius     Primary source: Meditations
+  Epictetus           Primary source: Enchiridion, Discourses
+  Seneca              Primary source: Epistles, On the Shortness of Life
+  Viktor Frankl       Primary source: Man's Search for Meaning
+
+--- Existentialism & Freedom ---
+  Soren Kierkegaard   Primary source: The Concept of Anxiety, Either/Or
+  Albert Camus        Primary source: The Myth of Sisyphus, The Stranger
+  Jean-Paul Sartre    Primary source: Existentialism is a Humanism, Being and Nothingness
+  Friedrich Nietzsche Primary source: Thus Spoke Zarathustra, Beyond Good and Evil,
+                        On the Genealogy of Morality
+  Simone de Beauvoir  Primary source: The Ethics of Ambiguity, The Second Sex
+
+--- Wealth & Rationality ---
+  Naval Ravikant      Source: The Almanack of Naval Ravikant. DEFAULT: [speculative]
+  Charlie Munger      Source: Poor Charlie's Almanack, DJCO meeting transcripts
+  Ray Dalio           Source: Principles
+  Nassim Nicholas Taleb Source: The Black Swan, Antifragile, Skin in the Game
+  Robert Axelrod      Source: The Evolution of Cooperation [evidence-based]
+  Robert Wright       Source: Nonzero: The Logic of Human Destiny
+
+--- Craft & Creativity ---
+  Steven Pressfield   Source: The War of Art, Turning Pro
+  Rick Rubin          Source: The Creative Act (2023). DEFAULT: [speculative]
+  Vincent van Gogh    Source: Letters to Theo (primary). Cite by letter/date.
+  Rainer Maria Rilke  Source: Letters to a Young Poet (primary)
+  Mihaly Csikszentmihalyi Source: Flow: The Psychology of Optimal Experience
+  Yvon Chouinard      Source: Let My People Go Surfing
+
+--- Eastern & Humanist ---
+  Shunryu Suzuki      Source: Zen Mind, Beginner's Mind
+  Laozi               Source: Tao Te Ching (use multiple translations for accuracy)
+  Confucius           Source: The Analects
+  Michel de Montaigne Source: Essays (primary)
+  Stefan Zweig        Source: The World of Yesterday, essays
+  Leo Tolstoy         Source: The Death of Ivan Ilyich, A Confession, essays
+  Henry David Thoreau Source: Walden (primary). Note: biographical gap between
+                        prescription and practice (walked to mother's for meals)
+                        is valid [warning] material.
+
+--- Systems & Performance ---
+  Atul Gawande        Source: The Checklist Manifesto, Being Mortal
+  Richard Hamming     Source: You and Your Research (lecture, 1986), The Art of
+                        Doing Science and Engineering
+  Cal Newport         Source: Deep Work, Digital Minimalism, So Good They Can't
+                        Ignore You
+  Peter Bevelin       Source: Seeking Wisdom (applies Munger's mental models)
+
+--- Philosophy & Logic ---
+  Aristotle           Source: Nicomachean Ethics, Politics
+  Plato               Source: The Republic, Phaedo, Symposium
+  Socrates            Source: Via Plato's dialogues. Flag as (via Plato) always.
+  Blaise Pascal       Source: Pensees
+  Epicurus            Source: Letter to Menoeceus, Principal Doctrines.
+                        CRITICAL NOTE: Epicurus is not a hedonist in the popular
+                        sense. His philosophy centers on ataraxia (tranquility)
+                        and removal of death-anxiety. Do not misrepresent.
+  Alfred Adler        Source: Understanding Human Nature, What Life Could Mean to You.
+                        Secondary: The Courage to Be Disliked (Kishimi & Koga)
+                        as accessible modern translation of Adlerian thought.
+  Adam Smith          Source: The Theory of Moral Sentiments (NOT Wealth of Nations).
+                        Focus: the "impartial spectator" concept.
+  Bertrand Russell    Source: The Conquest of Happiness (primary for this project)
+
+--- Science & Mind ---
+  Daniel Kahneman     Source: Thinking, Fast and Slow. Note: some behavioral
+                        economics findings have replication issues post-2015.
+                        Note where relevant in Evidence Notes. [evidence-based]
+                        where findings are robust.
+  Yuval Noah Harari   Source: Sapiens. DEFAULT: [speculative]. Claims frequently
+                        exceed evidence. Good [tension] source.
+  Leonardo da Vinci   Source: The Notebooks (via Isaacson biography). ALL quotes
+                        flagged (via Isaacson) or (Notebooks, paraphrase).
+
+--- Removed / Rejected Authors ---
+  Matt Ridley         REMOVED. Cherry-picking criticism too substantive.
+  J.D. Williams       REMOVED. The Compleat Strategyst is a military game theory
+                        textbook. Wrong register for daily applied philosophy.
+  Steven Novella      REJECTED from pantheon. The Skeptic's Guide is a methodology
+                        text, not a philosophy of life. Its function is served by
+                        the Evidence Policy architecture.
+  Bill Bryson         REJECTED from pantheon. A Short History / The Body are
+                        science communication, not philosophy. Montaigne covers
+                        the "humility before the universe" angle with more depth.
+
+================================================================================
+SECTION 9: THE 12-ARC YEAR STRUCTURE
+================================================================================
+
+The year is organized into four quarters, each with a governing question.
+The arc structure ensures SRS relationships build coherently across the year.
+
+OVERARCHING NARRATIVE:
+  Q1 — Perception:  Who am I and how do I see?
+  Q2 — Action:      How do I act well in the world?
+  Q3 — Systems:     What are the forces larger than me?
+  Q4 — Integration: What does it all add up to?
+
+--- ARC 1 | Days 1-30 | Q1 ---
+Title: The Foundation of Attention
+Governing Question: What deserves your focus, and why does it keep slipping away?
+Primary Thinkers: Marcus Aurelius, Epictetus, Thoreau, Cal Newport,
+  Csikszentmihalyi, Shunryu Suzuki
+Dominant Tags: [practice] [mindset] [internally focused] [overlap]
+Key Tension: Newport's structured intentionality vs. Suzuki's effortless awareness
+SRS Seeds (carry forward): Stoic dichotomy of control (recurs Arc 6, Arc 10).
+  Csikszentmihalyi's flow (recurs Arc 4).
+Closing Note: Ends with [tension] entry — is focused attention a discipline to
+  be trained, or a natural state to be recovered?
+
+--- ARC 2 | Days 31-60 | Q1 ---
+Title: The Architecture of Self
+Governing Question: Who is the self doing the attending?
+Primary Thinkers: Kierkegaard, Sartre, de Beauvoir, Adler, William James, Epictetus
+Dominant Tags: [mindset] [warning] [internally focused] [unresolved]
+Key Tension: Sartre (existence precedes essence) vs. Adler (teleological self,
+  you move toward goals not away from causes) vs. James (self as habit).
+SRS Seeds: Bad faith (recurs Arc 10). James on habit (recurs Arc 8).
+Closing Note: Ends with [unresolved] — do you construct the self, or discover it?
+
+--- ARC 3 | Days 61-90 | Q1 ---
+Title: The World as It Is
+Governing Question: How reliably do you perceive reality?
+Primary Thinkers: Kahneman, Taleb, Harari, Pascal, Socrates, Bevelin
+Dominant Tags: [warning] [mindset] [evidence-based] [speculative] [unresolved]
+Key Tension: Kahneman (bias is cognitive and partially correctable) vs. Taleb
+  (the system is structurally fragile, correction is insufficient).
+SRS Seeds: Taleb's antifragility (recurs Arc 6). Harari's imagined orders (recurs Arc 9).
+Closing Note: Ends with Socrates — the examined life begins with admitting
+  you do not know.
+
+--- ARC 4 | Days 91-120 | Q2 ---
+Title: Making Things
+Governing Question: What does serious creative work require, and what stands in the way?
+Primary Thinkers: van Gogh, Rilke, Pressfield, Rick Rubin, Chouinard,
+  Leonardo (via Isaacson/Notebooks), Csikszentmihalyi
+Dominant Tags: [practice] [warning] [internally focused] [speculative]
+Key Tension: Pressfield ("ship it, the muse comes after starting") vs. Rilke
+  ("wait until you must write — do not rush ripening").
+SRS Seeds: Flow (recurs Arc 8). Chouinard's ethics of building (recurs Arc 5).
+Note: This is the most [practice]-oriented arc and the emotional center of Q2.
+
+--- ARC 5 | Days 121-150 | Q2 ---
+Title: What Do We Owe Each Other?
+Governing Question: What are your obligations beyond yourself?
+Primary Thinkers: Adam Smith (TMS), Aristotle, Hannah Arendt, de Beauvoir,
+  Axelrod, Robert Wright
+Dominant Tags: [relational] [overlap] [tension] [evidence-based]
+Key Tension: Sartre (others are the source of radical self-consciousness) vs.
+  Arendt (others are the condition of meaning — the self only becomes real
+  in the public realm).
+SRS Seeds: Impartial spectator (recurs Arc 10). Axelrod's tit-for-tat (recurs Arc 9).
+Note: First explicitly [relational]-dominant arc. Opens with Adam Smith as moral
+  philosopher — the deliberate surprise of TMS vs. Wealth of Nations.
+
+--- ARC 6 | Days 151-180 | Q2 ---
+Title: The Management of Fortune
+Governing Question: What do you actually control? How do you build a life robust
+  to what you do not?
+Primary Thinkers: Taleb, Seneca, Marcus Aurelius, Pascal, Charlie Munger,
+  Ray Dalio, Montaigne
+Dominant Tags: [warning] [practice] [mindset] [tension]
+Key Tension: Stoic amor fati (love what happens, accept fully) vs. Taleb's
+  antifragility (engineer conditions so bad outcomes make you stronger — active,
+  not merely accepting).
+SRS Seeds: Munger's inversion (recurs Arc 8). Montaigne's flexibility (recurs Arc 11).
+Note: Hinge arc of the year. Readers have examined self, built self, looked at
+  creative work, confronted obligations. Now: what happens when the plan fails?
+
+--- ARC 7 | Days 181-210 | Q3 ---
+Title: The Body and Time
+Governing Question: You live in a body that will die. What does philosophy say?
+Primary Thinkers: Epicurus, Gawande, Seneca, Montaigne, William James, Tolstoy
+Dominant Tags: [warning] [mindset] [unresolved] [internally focused]
+Key Tension: Epicurus (remove death-anxiety as precondition for living freely)
+  vs. Tolstoy's Ivan Ilyich (the deathbed realization that you lived the wrong
+  life — fiction as philosophy).
+SRS Seeds: Seneca on time (carries as [warning] throughout Q4).
+  Gawande on systems (recurs Arc 8).
+Note: Deliberately avoids Heidegger (prose difficulty too high for daily format).
+  Tolstoy's Death of Ivan Ilyich does the same philosophical work in narrative.
+
+--- ARC 8 | Days 211-240 | Q3 ---
+Title: Systems, Performance, and the Long Game
+Governing Question: How do you build structures that reliably produce good outcomes?
+Primary Thinkers: Hamming, Gawande, Newport, Bevelin, William James, Munger
+Dominant Tags: [practice] [evidence-based] [overlap]
+Key Tension: Hamming ("work on the important problem" — prioritize ruthlessly)
+  vs. Newport ("protect deep work at all costs" — structure ruthlessly).
+  Compatible emphases but create real daily planning tension.
+SRS Seeds: Hamming's "important problem" question (recurs as Q4 synthesis prompt).
+  James on habit (final synthesis in Arc 12).
+Note: Most explicitly applied/performance arc. Hamming's 1986 Bell Labs lecture
+  is the empirical anchor (Nobel laureate habit study). Bevelin's Seeking Wisdom
+  is the most underread book on the full list.
+
+--- ARC 9 | Days 241-270 | Q3 ---
+Title: Society, Power, and Collective Fictions
+Governing Question: What stories is civilization telling you, and are you choosing
+  them consciously?
+Primary Thinkers: Harari, Arendt, Nietzsche, Axelrod, Wright, Adam Smith (TMS
+  revisited), Confucius, Laozi
+Dominant Tags: [tension] [warning] [relational] [unresolved] [speculative]
+Key Tension: Nietzsche (all moral systems are power-projects — be suspicious) vs.
+  Axelrod/Wright (cooperation is empirically stable and evolutionarily favored,
+  giving morality a non-theistic foundation).
+SRS Seeds: Nietzsche's revaluation (becomes [unresolved] thread in Arc 11).
+  Wright's cooperation (becomes [overlap] resolution in Arc 12).
+Note: Most politically complex arc. Deliberately places Harari's imagined orders
+  at civilizational scale (Arc 3 was personal cognitive scale). Nietzsche's
+  genealogy of morality is the most challenging entry of the year.
+
+--- ARC 10 | Days 271-300 | Q4 ---
+Title: The Dark Night
+Governing Question: What do the philosophers say when things actually fall apart?
+Primary Thinkers: Frankl, Kierkegaard, Camus, Nietzsche, de Beauvoir, Seneca,
+  Marcus Aurelius
+Dominant Tags: [warning] [mindset] [unresolved] [internally focused]
+Key Tension: Frankl (meaning is available even in suffering — the will to meaning
+  is primary) vs. Camus (there is no meaning — only the choice to revolt against
+  meaninglessness, which is itself the meaning).
+SRS Seeds: Frankl's will to meaning (becomes [overlap] resolution in Arc 12
+  alongside Aristotle's eudaimonia).
+Note: PLACEMENT IS INTENTIONAL. Frankl encountered at Day 5 = motivational quote.
+  Frankl encountered at Day 271 after 270 days of examined material = full
+  philosophical weight. Marcus Aurelius writing Meditations — not for publication,
+  at war, probably sick, facing children's deaths — is the proof of concept for
+  everything Arc 1 built.
+
+--- ARC 11 | Days 301-330 | Q4 ---
+Title: Wisdom Traditions in Dialogue
+Governing Question: What happens when you put all the traditions in the same room?
+Primary Thinkers: Suzuki, Laozi, Confucius, Montaigne, Epicurus, Aristotle,
+  Russell, Zweig
+Dominant Tags: [overlap] [tension] [unresolved] [theistic]
+Key Tension: Eastern non-attachment (the good life requires releasing desire) vs.
+  Aristotle's eudaimonia (the good life requires exercising your highest
+  capacities — deeply appetitive, not renunciatory).
+SRS Seeds: This arc seeds no new concepts. Designed to trigger the broadest
+  possible SRS review stack from the full year.
+Note: Explicitly surfaces [overlap] and [tension] patterns across traditions that
+  the tag system has been quietly building all year. Russell's Conquest of
+  Happiness is the 20th-century humanist synthesis attempt.
+
+--- ARC 12 | Days 331-365 | Q4 ---
+Title: The Examined Life
+Governing Question: What does the year add up to?
+Primary Thinkers: Russell, Montaigne, Thoreau, Tolstoy, Aristotle, James, Frankl
+Dominant Tags: [overlap] [practice] [unresolved]
+Structure:
+  Days 331-355 (25 entries): Explicit synthesis. Each entry pairs two thinkers
+    from different arcs and asks what they would say to each other.
+  Days 356-365 (10 entries): Journal-forward. Seed and Synthesis compressed.
+    Application and Today's Prompt expanded. The user's own Archive entries
+    (pulled by tag and date from Firestore) are the primary input — not the
+    content database. This is the proof of the project's real goal.
+  Day 365: Single prompt, no thinker attached. "What is your examined life?"
+Final Tension: Montaigne (the essay is never finished, only abandoned) vs.
+  Aristotle (the telos of a life can be assessed at its end). Left open.
+  Deliberately. Final entry is always [unresolved].
+
+================================================================================
+SECTION 10: TECHNICAL ARCHITECTURE
+================================================================================
+
+MVP Target: Progressive Web App (PWA)
+  Rationale: Fastest path to iPhone-accessible product. Validate the daily loop
+  with real use before building native. iOS PWA support is second-class vs.
+  Android (background sync, notifications, offline behavior inconsistent on
+  Safari) but acceptable for MVP.
+  Escalation path: React Native or Flutter if native iOS performance is required
+  after MVP validation. Do not build native until the daily loop is validated
+  over 30 real days.
+
+Stack:
+  Frontend:   React (PWA)
+  Hosting:    Render.com
+  Database:   Firebase Firestore
+  Schema:     JSON Schema (define before writing any content — schema integrity
+              determines tagging/filtering reliability)
+
+Firestore Document Structure (minimum required fields per Entry):
+  entry_id:         string (unique)
+  day_number:       integer
+  arc_number:       integer (1-12)
+  title:            string
+  thinkers:         array of strings
+  seed:             string
+  seed_source:      string (include (paraphrase) or (source uncertain) flags here)
+  synthesis:        string
+  application:      string
+  tags:             array of strings (from canonical Tag System)
+  evidence_note:    string (null if not applicable)
+  prompt:           string
+  prompt_archetype: string (Synthetic | Audit | In-The-Wild)
+  created_at:       timestamp
+  reviewed:         boolean
+  reviewed_at:      timestamp (null until reviewed)
+  srs_quality:      integer (1, 3, or 5 — from user rating)
+  srs_interval:     integer (days, computed by SM-2)
+  srs_ease_factor:  float (SM-2 ease factor, initial value 2.5)
+  srs_next_review:  timestamp (computed)
+  srs_repetitions:  integer (SM-2 repetition count)
+
+Firestore Document Structure (minimum required fields per Journal Response):
+  response_id:      string (unique)
+  entry_id:         string (foreign key to Entry)
+  day_number:       integer
+  arc_number:       integer
+  prompt_archetype: string
+  response_text:    string
+  tags:             array of strings (user-confirmed or auto-inherited from entry)
+  created_at:       timestamp
+
+CRITICAL: Archive query capability must support filtering by tag AND date range.
+  This is required for Arc 12 (Days 356-365) where past journal entries are
+  the primary content input, not the philosophical database.
+
+SRS UI:
+  After reading each entry or SRS review card, user sees three buttons:
+    "Easy"        -> srs_quality = 5
+    "Took effort" -> srs_quality = 3
+    "Struggled"   -> srs_quality = 1
+  Any entry rated below quality 3 returns to queue the next day regardless of
+  computed interval.
+
+================================================================================
+SECTION 11: CONTENT PRODUCTION PIPELINE
+================================================================================
+
+Phase 1: Content before code.
+  Write and review 30 days of content at full quality before writing app code.
+  Validate that the daily loop actually works for the user over 30 real days.
+
+Phase 2: Write in 30-day batches (one arc at a time).
+  User reviews each arc before the next is written.
+  Quality standard: The Day 3 proof of concept (Rilke + Camus / Solitude and
+  the Absurd) is the canonical benchmark for entry quality.
+
+Content writing rules:
+  - The Application and Today's Prompt are the product. The Seed and Synthesis
+    are the ramp.
+  - Prompts must require the user to surface something from their own life.
+    The thinker provides the frame. The user provides the content.
+  - Never present entries as teaching material. The user has read these books.
+    The entry reminds and activates, it does not instruct.
+  - Thinker frequency cap: no single thinker as primary in more than 3 arcs.
+    (Any thinker may appear in SRS review material across the full year.)
+
+Current status: Year arc fully mapped. Ready to write Arc 1 (Days 1-30).
+  Arc 1 primary thinkers: Marcus Aurelius, Epictetus, Thoreau, Cal Newport,
+  Csikszentmihalyi, Shunryu Suzuki.
+
+================================================================================
+SECTION 12: DECISIONS LOG (CHRONOLOGICAL)
+================================================================================
+
+[Decision 1]  Core format: Daily companion + journal app, not a static handbook.
+[Decision 2]  Name: Aporia.
+[Decision 3]  The four-module daily loop (Main Entry, SRS Review, Today's Prompt,
+               Archive) is the non-negotiable structural unit.
+[Decision 4]  SM-2 algorithm (Wozniak, 1990) governs all SRS scheduling.
+               Fixed intervals rejected.
+[Decision 5]  SRS rating UI: 3-point scale (Easy/Took effort/Struggled) mapping
+               to SM-2 quality scores 5/3/1.
+[Decision 6]  J.D. Williams (The Compleat Strategyst) REMOVED. Wrong register.
+[Decision 7]  Robert Wright (Nonzero) ADDED to Wealth & Rationality.
+[Decision 8]  Matt Ridley REMOVED. Cherry-picking criticism too substantive.
+[Decision 9]  Naval Ravikant KEPT. Default [speculative] on every entry.
+[Decision 10] Rick Rubin KEPT. Default [speculative] on every entry.
+[Decision 11] Socrates ADDED to Philosophy & Logic.
+[Decision 12] Adam Smith (Theory of Moral Sentiments only) ADDED.
+[Decision 13] Leonardo da Vinci (via Isaacson/Notebooks) ADDED with strict
+               sourcing flag requirement.
+[Decision 14] Yvon Chouinard (Let My People Go Surfing) ADDED to Craft & Creativity.
+[Decision 15] Steven Novella (Skeptic's Guide) REJECTED. Methodology text, not
+               philosophy of life. Function served by Evidence Policy.
+[Decision 16] Bill Bryson (A Short History / The Body) REJECTED. Science
+               communication, not philosophy.
+[Decision 17] Harari (Sapiens) ADDED with default [speculative] and sourcing caveats.
+[Decision 18] Thoreau (Walden) ADDED to Eastern & Humanist.
+[Decision 19] Alfred Adler ADDED to Philosophy & Logic.
+[Decision 20] Daniel Kahneman ADDED to Science & Mind. Strongest [evidence-based]
+               anchor on the list.
+[Decision 21] Bertrand Russell (The Conquest of Happiness) ADDED to Philosophy & Logic.
+[Decision 22] William James ADDED (habit, pragmatism) to Philosophy & Logic.
+[Decision 23] Hannah Arendt (The Human Condition) ADDED to Philosophy & Logic.
+[Decision 24] 12-arc year structure confirmed with Q1/Q2/Q3/Q4 governing narrative.
+[Decision 25] Thinker frequency cap: no single thinker as primary in more than
+               3 arcs. Unlimited SRS appearances.
+[Decision 26] Arc 12 final 10 days (Days 356-365): user's own Archive entries
+               are the primary content input. Must be architected into Firestore
+               schema from the start, not retrofitted.
+[Decision 27] Content-first approach confirmed. Write Arc 1 (30 days) before
+               writing any app code.
+[Decision 28] Content production: write in 30-day batches, user reviews each
+               arc before next is written.
+[Decision 29] MVP: PWA on Render.com + Firebase Firestore + React. Not native iOS.
+[Decision 30] Day 3 proof of concept (Rilke + Camus) is the canonical quality
+               standard for all content entries.
+
+================================================================================
+END OF FILE
+================================================================================
